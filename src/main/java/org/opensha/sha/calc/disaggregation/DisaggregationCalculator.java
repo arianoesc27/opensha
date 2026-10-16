@@ -405,8 +405,18 @@ implements DisaggregationCalculatorAPI {
 		        	continue;
 		        }
 
+				//AR: This used to be imr.getExceedProbability(iml), the version with one argument, which
+				//AR: never calls setEqkRupture() on the IMR. Two lines below, getEpsilon(rupture) (the version
+				//AR: with two arguments) already does it right for the same imr and rupture, so this call just
+				//AR: did not match the one next to it. Most attenuation relationships don't notice, because
+				//AR: they don't need a rupture object in every call. CyberShakeIMR does, because it looks up
+				//AR: simulated amplitudes by the Source_ID/Rupture_ID of the rupture instead of a parametric
+				//AR: mean and stdDev, and it throws "The CyberShakeIMR isn't being used with a CyberShake ERF!"
+				//AR: when eqkRupture is null or old. getExceedProbability(EqkRupture, double) is the documented
+				//AR: safe way in ScalarIMR. It calls setEqkRupture(rupture) first (with the point source
+				//AR: distance corrections) and then the version with one argument.
 				// get the cond prob
-				condProb = imr.getExceedProbability(iml);
+				condProb = imr.getExceedProbability(rupture, iml);
 				// should the following throw an exception?
 				if (condProb == 0 && D)
 					System.out.println(S +
